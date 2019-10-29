@@ -1,5 +1,9 @@
 /**
-
+ * Author: James Stevenson
+ * Project: 4
+ * Description: Merge of two halves of an array sorted by selection
+	sort using threads
+ * Section: 2
  */
 
 #include <pthread.h>
@@ -29,14 +33,13 @@ void swap(int *a, int *b) {
 }
 
 int main (int argc, const char * argv[]) 
-{
-	int i;
-    
+{    
 	pthread_t workers[NUMBER_OF_THREADS];
 	
-	printf("Unsorted array is: ");
+	//print unsorted array
+	printf("Unsorted array:\n");
 	for (int i = 0; i < SIZE; i++) {
-		printf("%d : %d", i, list[i]);
+		printf("%d: %d\n", i, list[i]);
 	}
 	printf("\n");
 
@@ -46,7 +49,7 @@ int main (int argc, const char * argv[])
 	//2. use “parameters” to specify the first half of the array
 	threadParam->from_index = 0;
 	threadParam->to_index = (SIZE/2) - 1;
-      //3. create the first thread
+   	//3. create the first thread
 	pthread_create(&workers[0], 0, sorter, threadParam);
 
 	/* establish the second sorting thread */
@@ -55,21 +58,20 @@ int main (int argc, const char * argv[])
 	//2. use “parameters” to specify the second half of the array
 	threadParam->from_index = SIZE/2;
 	threadParam->to_index = SIZE - 1;
-    //3. create the second thread
+  	 //3. create the second thread
 	pthread_create(&workers[1], 0, sorter, threadParam);
 	
 	/* now wait for the 2 sorting threads to finish */
-	// use ptheread_join; wait for 2 sorting threads to finish 
-	ptheread_join(workers[0],NULL);
-	ptheread_join(workers[1],NULL);
+	// use pthread_join; wait for 2 sorting threads to finish 
+	pthread_join(workers[0],NULL);
+	pthread_join(workers[1],NULL);
 
 	/* establish the merge thread */
 	//reuse “parameters” to hold the beginning index in each half
-	//check if unnecessary
-	threadParam = (parameters *) malloc (sizeof(parameters));
 	//from_index is start of first, to_index is start of second
 	threadParam->from_index = 0;
 	threadParam->to_index = SIZE/2;
+
 	//create the third thread: merge 
 	pthread_create(&workers[2], 0, merger, threadParam);
 	
@@ -77,20 +79,17 @@ int main (int argc, const char * argv[])
 	 pthread_join(workers[2], NULL);
 
 	/* output the sorted array */
-	printf("Sorted array is: ");
+	printf("Sorted array:\n");
 	for (int i = 0; i < SIZE; i++) {
-		printf("%d : %d", i, result[i]);
+		printf("%d: %d\n", i, result[i]);
 	}
-	printf("\n");
 
     return 0;
 }
 
 /**
  * Sorting thread.
- *
- * This thread can essentially use any algorithm for sorting
- */
+*/
 
 void *sorter(void *params)
 {
@@ -98,23 +97,21 @@ void *sorter(void *params)
 	int start = p->from_index;
 	int pSize = p->to_index + 1;
 	
-	// Sorting algorithm here. It can be any sorting algorithm.
+	// Selection sort
 	for (int i = start; i < pSize - 1; i++) {
 		int min = i;
-		for (int j = start; i < start; j++) {
+		for (int j = i + 1; j < pSize; j++) {
 			if(list[j] < list[min])
 				min = j;
 		}
 		swap(&list[min], &list[i]);
 	}
-	
 	pthread_exit(0);
 }
 
 /**
  * Merge thread
- *
- * Uses simple merge sort for merging two sublists
+ * Using simple merge sort for merging two sublists
  */
 
 void *merger(void *params)
@@ -122,7 +119,7 @@ void *merger(void *params)
 	parameters* p = (parameters *)params;
 	
 	//reuse “parameters” to hold the first index in each half
-	//merge two sorted sublist to the arry result
+	//merge two sorted sublists to the arry result
 	int firstArr = p->from_index;
 	int secondArr = p->to_index;
 	int i = 0;
